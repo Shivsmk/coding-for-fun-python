@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Apr 25 18:23:11 2021
-
+@summary: Basic Ant movement engine. Move radom, avoid walls, avoid each other.
 @author: Shiv SMK
 """
 
