@@ -11,14 +11,17 @@ import random
 
 def main():
     # CONSTANTS
-    sh = 600
-    sw = 600
+    sh = 700
+    sw = 700
     FPS = 50
     
     # PARAMETERS
-    population = 100
+    population = 200
     ball_radius = 10
     ball_velocity = 100
+    infect_threshold = 0.5
+    infect_type = population + 1
+    recovered_type = population + 2
     
     # INITIALIZATION
     pygame.init()
@@ -35,10 +38,24 @@ def main():
             self.shape = pymunk.Circle(self.body, ball_radius)
             self.shape.elasticity = 1
             self.shape.density = 1
+            self.infected = False
             space.add(self.body, self.shape)
             
         def draw(self):
-            pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
+            if self.infected:
+                pygame.draw.circle(display,(255, 0, 0), convert_coordinates(self.body.position), ball_radius)
+            else:
+                pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
+        
+        def infect(self, space=0, arbiter=0, data=0):
+            if random.uniform(0,1) >= infect_threshold:
+                self.infected = True
+                self.shape.collision_type = infect_type
+        
+        def first_infect(self, space=0, arbiter=0, data=0):
+            self.infected = True
+            self.shape.collision_type = infect_type
+            
     
     class Wall():
         def __init__(self, p1, p2):
@@ -58,6 +75,15 @@ def main():
     
     # PARTICLE INITIALIZATION AS LIST OF PARTICLES
     balls = [Ball(random.randint(ball_radius,sw-ball_radius),random.randint(ball_radius,sh-ball_radius)) for i in range(population)]
+    
+    # SET COLLISION HANDLER
+    for i in range(1, population+1):
+        balls[i-1].shape.collision_type = i
+        handler = space.add_collision_handler(i, infect_type)
+        handler.separate = balls[i-1].infect
+    
+    # INFECT A BALL AT RANDOM
+    random.choice(balls).first_infect()
     
     # SET WALLS
     walls = [Wall((0,0), (sw,0)),
