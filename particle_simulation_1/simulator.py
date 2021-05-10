@@ -9,7 +9,6 @@ import pygame
 import pymunk
 import random
 
-
 def main():
     # CONSTANTS
     sh = 600
@@ -40,13 +39,31 @@ def main():
             
         def draw(self):
             pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
+    
+    class Wall():
+        def __init__(self, p1, p2):
+            self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+            self.p1 = p1
+            self.p2 = p2
+            self.shape = pymunk.Segment(self.body, self.p1, self.p2, 1)
+            self.shape.elasticity = 1
+            space.add(self.body,self.shape)
         
+        def draw(self):
+            pygame.draw.line(display, (0, 0, 0), convert_coordinates(self.p1), convert_coordinates(self.p2), 1)
+    
     # FUNCTIONS
     def convert_coordinates(point):
         return int(point[0]), sh-int(point[1])
     
-    # PARTICLE INITIALIZATION
+    # PARTICLE INITIALIZATION AS LIST OF PARTICLES
     balls = [Ball(random.randint(ball_radius,sw-ball_radius),random.randint(ball_radius,sh-ball_radius)) for i in range(population)]
+    
+    # SET WALLS
+    walls = [Wall((0,0), (sw,0)),
+            Wall((sw,0), (sw,sh)),
+            Wall((sw,sh), (0,sh)),
+            Wall((0,sh), (0,0))]
     
     # GAME LOOP
     while True:
@@ -58,6 +75,8 @@ def main():
         display.fill((255, 255, 255))
         
         # DRAW AND UPDATE
+        for wall in walls:
+            wall.draw()
         for ball in balls:
             ball.draw()
         
