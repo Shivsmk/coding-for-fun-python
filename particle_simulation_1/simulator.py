@@ -3,6 +3,8 @@
 Created on Sat May  8 21:29:07 2021
 @summary: Exporing pymunk with pygame for particle simulations
 @author: Shiv Muthukumar
+@motivation: [https://www.youtube.com/watch?v=yJK5J8a7NFs&t=2070s,
+              https://www.youtube.com/playlist?list=PL_N_kL9gRTm8lh7GxFHh3ym1RXi6I6c50]
 """
 
 import pygame
