@@ -20,6 +20,7 @@ def main():
     ball_radius = 10
     ball_velocity = 100
     infect_threshold = 0.5
+    recovery_time = 100
     infect_type = population + 1
     recovered_type = population + 2
     
@@ -39,11 +40,15 @@ def main():
             self.shape.elasticity = 1
             self.shape.density = 1
             self.infected = False
+            self.infected_time = 0
+            self.recovered = False
             space.add(self.body, self.shape)
             
         def draw(self):
             if self.infected:
                 pygame.draw.circle(display,(255, 0, 0), convert_coordinates(self.body.position), ball_radius)
+            elif self.recovered:
+                pygame.draw.circle(display,(0, 0, 255), convert_coordinates(self.body.position), ball_radius)
             else:
                 pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
         
@@ -51,6 +56,14 @@ def main():
             if random.uniform(0,1) >= infect_threshold:
                 self.infected = True
                 self.shape.collision_type = infect_type
+        
+        def pass_time(self, space=0, arbiter=0, data=0):
+            if self.infected and (random.uniform(0,1) >= infect_threshold):
+                self.infected_time += 1
+            if self.infected_time >= recovery_time:
+                self.recovered = True
+                self.infected = False
+                self.shape.collision_type = recovered_type
         
         def first_infect(self, space=0, arbiter=0, data=0):
             self.infected = True
@@ -105,6 +118,7 @@ def main():
             wall.draw()
         for ball in balls:
             ball.draw()
+            ball.pass_time()
         
         # GAME UPDATES
         pygame.display.update()
