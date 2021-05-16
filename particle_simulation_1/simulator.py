@@ -14,17 +14,22 @@ import random
 def main():
     # CONSTANTS
     sh = 700
-    sw = 700
+    sw = 1200
     FPS = 50
     
     # PARAMETERS
-    population = 200
-    ball_radius = 10
+    population = 3000
+    ball_radius = 3
     ball_velocity = 100
-    infect_threshold = 0.5
-    recovery_time = 100
-    infect_type = population + 1
-    recovered_type = population + 2
+    infect_threshold = 0.9
+    force_infection = True
+    survival_threshold = 0.001
+    recovery_time = 200
+    
+    # COLLISION TYPE PARAMETERS
+    infect_type = population + 2
+    recovered_type = population + 3
+    dead_type = population + 4
     
     # INITIALIZATION
     pygame.init()
@@ -42,8 +47,10 @@ def main():
             self.shape.elasticity = 1
             self.shape.density = 1
             self.infected = False
-            self.infected_time = 0
+            self.infection_history = 0
             self.recovered = False
+            self.dead = False
+            self.init_collision_type = 0
             space.add(self.body, self.shape)
             
         def draw(self):
@@ -51,21 +58,47 @@ def main():
                 pygame.draw.circle(display,(255, 0, 0), convert_coordinates(self.body.position), ball_radius)
             elif self.recovered:
                 pygame.draw.circle(display,(0, 0, 255), convert_coordinates(self.body.position), ball_radius)
+            elif self.dead:
+                pygame.draw.circle(display,(64, 64, 64), convert_coordinates(self.body.position), ball_radius)            
             else:
                 pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
         
         def infect(self, space=0, arbiter=0, data=0):
-            if random.uniform(0,1) >= infect_threshold:
+            if random.uniform(0,1) >= 1-infect_threshold or force_infection:
                 self.infected = True
                 self.shape.collision_type = infect_type
         
+        def nowDead(self):
+            self.dead = True
+            self.infected = False
+            self.recovered = False
+            self.body.velocity = 0, 0
+            self.shape.density = 100000
+            self.shape.collision_type = dead_type
+        
         def pass_time(self, space=0, arbiter=0, data=0):
-            if self.infected and (random.uniform(0,1) >= infect_threshold):
-                self.infected_time += 1
-            if self.infected_time >= recovery_time:
-                self.recovered = True
-                self.infected = False
-                self.shape.collision_type = recovered_type
+            if not self.dead:
+                # INCREMENT HISTORY OF INFECTION IF INFECTED OR RECOVERED
+                if self.infected or self.recovered:
+                        self.infection_history += 1
+                # RETURN TO NORMALCY IF INFECTION HISTORY MORE THAN 10x REQUIRED RECOVERY TIME
+                if self.infection_history >= 10 * recovery_time:
+                    self.recovered = False
+                    self.infected = False
+                    self.infection_history = 0
+                    self.shape.collision_type = self.init_collision_type
+                # SET TO RECOVERY IF INFECTION HISTORY MORE THAN REQUIRED RECOVERY TIME
+                elif self.infection_history >= recovery_time:
+                    self.recovered = True
+                    self.infected = False
+                    self.shape.collision_type = recovered_type
+                # SMALL CHANCE FOR RECOVERED PERSON TO DIE DUE TO INFECTION HISTORY
+                if self.recovered and random.uniform(0, 1) > 1 - survival_threshold:
+                        self.nowDead()
+                # HIGH CHANCE FOR INFECTED PERSON TO DIE DUE TO INFECTION
+                if self.infected and random.uniform(0, 1) < survival_threshold:
+                        self.nowDead()
+            
         
         def first_infect(self, space=0, arbiter=0, data=0):
             self.infected = True
@@ -94,6 +127,7 @@ def main():
     # SET COLLISION HANDLER
     for i in range(1, population+1):
         balls[i-1].shape.collision_type = i
+        balls[i-1].init_collision_type = i
         handler = space.add_collision_handler(i, infect_type)
         handler.separate = balls[i-1].infect
     
@@ -129,6 +163,13 @@ def main():
     
     # QUIT PYGAME
     pygame.quit()
+    
+    # STAT COLLECTION
+    count_dead = sum(p.dead for p in balls)
+    count_alive = population - count_dead
+    print("Starting population:",population)
+    print("Post-Infection Dead:", count_dead)
+    print("Post-Infection Alive", count_alive)
 
 if __name__ == "__main__":
     main()
