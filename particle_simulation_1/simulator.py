@@ -13,23 +13,23 @@ import random
 
 def main():
     # CONSTANTS
-    sh = 700
-    sw = 1200
+    sh = 750
+    sw = 1400
     FPS = 50
     
     # PARAMETERS
     population = 3000
     ball_radius = 3
     ball_velocity = 100
-    infect_threshold = 0.9
-    force_infection = True
-    survival_threshold = 0.001
-    recovery_time = 200
+    force_infection = False
+    toggle_vaccination = True
+    vaccination_rate = 0.001
     
     # COLLISION TYPE PARAMETERS
     infect_type = population + 2
     recovered_type = population + 3
     dead_type = population + 4
+    vaccine_type = population + 5
     
     # INITIALIZATION
     pygame.init()
@@ -46,11 +46,16 @@ def main():
             self.shape = pymunk.Circle(self.body, ball_radius)
             self.shape.elasticity = 1
             self.shape.density = 1
-            self.infected = False
+            self.init_collision_type = 0
             self.infection_history = 0
+            self.infected = False
             self.recovered = False
             self.dead = False
-            self.init_collision_type = 0
+            self.vaccine = False
+            self.infection_rate = 0.5
+            self.survival_rate = 0.001
+            self.recovery_time = 200
+            
             space.add(self.body, self.shape)
             
         def draw(self):
@@ -59,12 +64,14 @@ def main():
             elif self.recovered:
                 pygame.draw.circle(display,(0, 0, 255), convert_coordinates(self.body.position), ball_radius)
             elif self.dead:
-                pygame.draw.circle(display,(64, 64, 64), convert_coordinates(self.body.position), ball_radius)            
+                pygame.draw.circle(display,(64, 64, 64), convert_coordinates(self.body.position), ball_radius)
+            elif self.vaccine:
+                pygame.draw.circle(display,(255,105,180), convert_coordinates(self.body.position), ball_radius)
             else:
                 pygame.draw.circle(display,(0, 255, 0), convert_coordinates(self.body.position), ball_radius)
         
         def infect(self, space=0, arbiter=0, data=0):
-            if random.uniform(0,1) >= 1-infect_threshold or force_infection:
+            if random.uniform(0,1) < self.infection_rate or force_infection:
                 self.infected = True
                 self.shape.collision_type = infect_type
         
@@ -76,28 +83,44 @@ def main():
             self.shape.density = 100000
             self.shape.collision_type = dead_type
         
+        def normalcy(self):
+            self.recovered = False
+            self.infected = False
+            self.infection_history = 0
+            self.shape.collision_type = self.init_collision_type
+            
+        def recovery(self):
+            self.recovered = True
+            self.infected = False
+            self.shape.collision_type = recovered_type
+            
+        def vaccinated(self):
+            self.vaccine = True
+            self.recovered = False
+            self.infected = False
+            self.infection_rate = 0.2 * self.infection_rate
+            self.shape.collision_type = vaccine_type
+        
         def pass_time(self, space=0, arbiter=0, data=0):
             if not self.dead:
                 # INCREMENT HISTORY OF INFECTION IF INFECTED OR RECOVERED
                 if self.infected or self.recovered:
                         self.infection_history += 1
                 # RETURN TO NORMALCY IF INFECTION HISTORY MORE THAN 10x REQUIRED RECOVERY TIME
-                if self.infection_history >= 10 * recovery_time:
-                    self.recovered = False
-                    self.infected = False
-                    self.infection_history = 0
-                    self.shape.collision_type = self.init_collision_type
+                if self.infection_history >= 10 * self.recovery_time:
+                    self.normalcy()
                 # SET TO RECOVERY IF INFECTION HISTORY MORE THAN REQUIRED RECOVERY TIME
-                elif self.infection_history >= recovery_time:
-                    self.recovered = True
-                    self.infected = False
-                    self.shape.collision_type = recovered_type
+                elif self.infection_history >= self.recovery_time:
+                    self.recovery()
                 # SMALL CHANCE FOR RECOVERED PERSON TO DIE DUE TO INFECTION HISTORY
-                if self.recovered and random.uniform(0, 1) > 1 - survival_threshold:
+                if self.recovered and random.uniform(0, 1) < self.survival_rate:
                         self.nowDead()
                 # HIGH CHANCE FOR INFECTED PERSON TO DIE DUE TO INFECTION
-                if self.infected and random.uniform(0, 1) < survival_threshold:
+                if self.infected and random.uniform(0, 1) < 2 * self.survival_rate:
                         self.nowDead()
+                # CHANCE FOR A NORMAL TO GET vaccinATED
+                if toggle_vaccination and not self.infected and not self.recovered and random.uniform(0, 1) < vaccination_rate:
+                    self.vaccinated()
             
         
         def first_infect(self, space=0, arbiter=0, data=0):
@@ -110,12 +133,12 @@ def main():
             self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
             self.p1 = p1
             self.p2 = p2
-            self.shape = pymunk.Segment(self.body, self.p1, self.p2, 1)
+            self.shape = pymunk.Segment(self.body, self.p1, self.p2, 5)
             self.shape.elasticity = 1
             space.add(self.body,self.shape)
         
         def draw(self):
-            pygame.draw.line(display, (0, 0, 0), convert_coordinates(self.p1), convert_coordinates(self.p2), 1)
+            pygame.draw.line(display, (0, 0, 0), convert_coordinates(self.p1), convert_coordinates(self.p2), 5)
     
     # FUNCTIONS
     def convert_coordinates(point):
@@ -139,6 +162,10 @@ def main():
             Wall((sw,0), (sw,sh)),
             Wall((sw,sh), (0,sh)),
             Wall((0,sh), (0,0))]
+    
+    # SETTING ADDITIONAL BARRIERS
+    # walls.append(Wall((sw/2,50), (sw/2,sh-50)))
+    # walls.append(Wall((50,sh/2), (sw-50,sh/2)))
     
     # GAME LOOP
     while True:
@@ -166,10 +193,12 @@ def main():
     
     # STAT COLLECTION
     count_dead = sum(p.dead for p in balls)
-    count_alive = population - count_dead
+    count_vaccinated = sum(p.vaccine for p in balls)
+    count_alive = population - count_dead - count_vaccinated
     print("Starting population:",population)
     print("Post-Infection Dead:", count_dead)
     print("Post-Infection Alive", count_alive)
+    print("vaccinated:", count_vaccinated)
 
 if __name__ == "__main__":
     main()
