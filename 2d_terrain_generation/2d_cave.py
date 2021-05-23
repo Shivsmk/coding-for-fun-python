@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun May 23 10:36:16 2021
-@summary: 2d Terrain Generation
+@summary: 2d Cave Generation
 @author: Shiv Muthukumar
 """
 

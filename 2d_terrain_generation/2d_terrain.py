@@ -18,7 +18,6 @@ def main():
     
     # PARAMETERS
     gridsize = 10
-    random.seed(9)
     
     # INITIALIZATION
     pygame.init()
@@ -32,7 +31,7 @@ def main():
             self.sh = sh
             self.sw = sw
             self.grid = np.zeros((int(self.sw/self.gs), int(self.sh/self.gs)))
-            self.bucket = 0.2
+            self.bucket = 0.22
         
         # ASSIGN RANDON NUMBER BETWEEN 0 AND 1 TO EACH GRID CELL
         def generateGrid(self):
@@ -40,7 +39,8 @@ def main():
                 for j in range(int(self.sh/self.gs)):
                     self.grid[i][j] = random.uniform(0, 1)
         
-        # COLOR CELL BLACK IF RANDON NUMBER > 0.5
+        # COLOR CELL ACCORDING TO TERRAIN
+        # WATER, SAND, GRASS, HILL, MOUNTAIN AT 0.22 INTERVALS -- LESS MOUNTAINS
         def drawGrid(self):
             for i in range(int(self.sw/self.gs)):
                 for j in range(int(self.sh/self.gs)):
@@ -55,8 +55,8 @@ def main():
                     else:
                         pygame.draw.rect(surface, (255, 255, 255), (i*self.gs, j*self.gs, self.gs, self.gs))
         
-        # IF COUNT OF BLACK CELLS SURROUNDING A CELL > 4 (MAX 8), COLOR BLACK
-        # ELSE COLOR WHITE
+        # BORDERS ARE ALL WATER
+        # REST GET AVERAGE OF SPECIFIC TERRAIN
         def smoothGrid(self):
             range_i = list(range(int(self.sw/self.gs)))
             range_j = list(range(int(self.sh/self.gs)))
@@ -68,7 +68,11 @@ def main():
                         self.grid[i][j] = 0
                     else:
                         self.grid[i][j] = self.surroundingCells(i, j)
-                            
+        
+        # WITH A 9x9 GRID HAVING THE CELL IN MIDDLE
+        # GET ASSIGN TERRAIN BASED ON VALUE
+        # GET MOST OCCURING TERRAIN FROM ADJACENT CELLS
+        # RETURN AVERAGE TERRAIN VALUE
         def surroundingCells(self, i, j):
             terrain = []
             terrain_dict = {
