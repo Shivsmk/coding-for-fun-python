@@ -15,7 +15,7 @@ def main():
     FPS = 50
     
     # PARAMETERS
-    gridsize = 5
+    gridsize = 2
     
     # INITIALIZATION
     pygame.init()
@@ -28,12 +28,12 @@ def main():
             self.gs = gs
             self.sh = sh
             self.sw = sw
-            self.grid = []
             self.x_iter = int(self.sw/self.gs)
             self.y_iter = int(self.sh/self.gs)
         
         # ASSIGN RANDON NUMBER BETWEEN 0 AND 1 TO EACH GRID CELL
         def generateGrid(self):
+            self.grid = []
             noise1 = PerlinNoise(octaves=3)
             noise2 = PerlinNoise(octaves=6)
             noise3 = PerlinNoise(octaves=12)
@@ -47,12 +47,25 @@ def main():
                     noise_val += 0.125* noise4([i/self.x_iter, j/self.y_iter])
                     row.append(noise_val)
                 self.grid.append(row)
+        
+        def paint_terrain(self, i, j):
+            if self.grid[i][j] <= 0.0:
+                color_code = (0,100,200)
+            elif self.grid[i][j] <= 0.1:
+                color_code = (200,150,100)
+            elif self.grid[i][j] <= 0.4:
+                color_code = (130,240,0)
+            elif self.grid[i][j] <= 0.7:
+                color_code = (100,60,20)
+            else:
+                color_code = (255, 240, 240)
+            pygame.draw.rect(surface, color_code, (i*self.gs, j*self.gs, self.gs, self.gs))
             
+        
         def drawGrid(self):
             for i in range(self.x_iter):
                 for j in range(self.y_iter):
-                    color_code = 255*(self.grid[i][j]+1)/2
-                    pygame.draw.rect(surface, (color_code, color_code, color_code), (i*self.gs, j*self.gs, self.gs, self.gs))
+                    self.paint_terrain(i, j)
         
     def newGridLayout(grid):
         grid.generateGrid()
