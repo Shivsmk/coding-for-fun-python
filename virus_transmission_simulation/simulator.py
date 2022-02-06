@@ -19,11 +19,11 @@ def main():
     
     # PARAMETERS
     population = 3000
-    ball_radius = 3
+    ball_radius = 5
     ball_velocity = 100
     force_infection = False
-    toggle_vaccination = True
-    vaccination_rate = 0.001
+    toggle_vaccination = False
+    vaccination_rate = 0.01
     
     # COLLISION TYPE PARAMETERS
     infect_type = population + 2
@@ -164,8 +164,8 @@ def main():
             Wall((0,sh), (0,0))]
     
     # SETTING ADDITIONAL BARRIERS
-    # walls.append(Wall((sw/2,50), (sw/2,sh-50)))
-    # walls.append(Wall((50,sh/2), (sw-50,sh/2)))
+    #walls.append(Wall((sw/2,50), (sw/2,sh-50)))
+    #walls.append(Wall((50,sh/2), (sw-50,sh/2)))
     
     # GAME LOOP
     while True:

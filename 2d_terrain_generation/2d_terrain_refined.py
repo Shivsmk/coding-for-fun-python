@@ -10,12 +10,12 @@ from perlin_noise import PerlinNoise
 
 def main():
     # CONSTANTS
-    sh = 700
-    sw = 700
+    sh = 500
+    sw = 500
     FPS = 50
     
     # PARAMETERS
-    gridsize = 2
+    gridsize = 1
     
     # INITIALIZATION
     pygame.init()
@@ -49,6 +49,7 @@ def main():
                 self.grid.append(row)
         
         def paint_terrain(self, i, j):
+            
             if self.grid[i][j] <= 0.0:
                 color_code = (0,100,200)
             elif self.grid[i][j] <= 0.1:
@@ -59,13 +60,15 @@ def main():
                 color_code = (100,60,20)
             else:
                 color_code = (255, 240, 240)
-            pygame.draw.rect(surface, color_code, (i*self.gs, j*self.gs, self.gs, self.gs))
+            return color_code    
+            # pygame.draw.rect(surface, color_code, (i*self.gs, j*self.gs, self.gs, self.gs))
             
         
         def drawGrid(self):
+            pixelArray = pygame.PixelArray(surface)
             for i in range(self.x_iter):
                 for j in range(self.y_iter):
-                    self.paint_terrain(i, j)
+                    pixelArray[i][j] = self.paint_terrain(i, j)
         
     def newGridLayout(grid):
         grid.generateGrid()
