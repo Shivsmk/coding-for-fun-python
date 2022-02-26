@@ -5,7 +5,7 @@ Created on Thu Feb  3 20:19:32 2022
 @author: Shiv Muthukumar
 @description: Based on the first guess, the program will narrow down the list
 of words that can represent the solution to the wordle puzzle.
-@version: 1
+@version: 2
 """
 
 """
@@ -106,6 +106,18 @@ def decode_input(itext, include_list=[], forget_list=[], exclude_list=[], exact_
         i+=1
     return (include_list, forget_list, exclude_list, exact_list)
 
+# TAKES THE FILTERED WORD LIST AND GENERATES A FREQUENCY LIST OF CHARACTERS
+# OUTPUTS A LIST OF TUPLES WITH THE FREQUENCY COUNT IN DESCENDING ORDER
+def frequency_of_letters(wordslist):
+    frequency_list = {}
+    for word in wordslist:
+        for i in word:
+            if i in frequency_list:
+                frequency_list[i] += 1
+            else:
+                frequency_list[i] = 1
+    return sorted(frequency_list.items(), key=lambda x:x[1], reverse=True)
+
 # LOGIC FOR A SINGLE ITERATION - FOR THE SECOND, THIRD, AND FOURTH ITERATIONS
 # TAKES THE INPUT, DECODES IT INTO THE REQUIRED LIST
 # FILTERS IT DOWN BY EXCLUDING ALL THE WORDS THAT CONTAIN NOT REQURIED LETTERS
@@ -113,6 +125,7 @@ def decode_input(itext, include_list=[], forget_list=[], exclude_list=[], exact_
 # THEN FILTERS DOWN BY ENSURING THE WORD DOES NOT CONTAIN AN INCLUDED LETTER IN THE PREVIOUS KNOWN LOCATION
 # FINALLY FILTERS DOWN BY ENSURING THE WORDS CONTAIN THE LETTERS IN THE EXACT SPOT
 # PRINTS THE LIST OF WORDS FOR THE USER TO CHOOSE FROM
+# PRINTS THE FREQUENCY OF LETTERS OCCURING IN THE ABOVE LIST
 def single_logic_cycle(wordslist, include_list, forget_list, exclude_list, exact_list):
     guess = input("Guess: ")
     include_list, forget_list, exclude_list, exact_list = decode_input(guess, include_list, forget_list, exclude_list, exact_list)
@@ -120,9 +133,12 @@ def single_logic_cycle(wordslist, include_list, forget_list, exclude_list, exact
     wordslist = narrow_wordslist(wordslist, 'include', include_list)
     wordslist = narrow_wordslist(wordslist, 'forget', forget_list)
     wordslist = narrow_wordslist(wordslist, 'exact', exact_list)
+    print("\nList of possible words:")
     print(wordslist)
+    print("\nFrequency count of occurring characters:")
+    print(frequency_of_letters(wordslist))
     return wordslist
-    
+
 def main():
     # FIRST ITERATION
     # TAKE THE FIRST GUESSED RESULT FROM WORDLE
@@ -134,7 +150,10 @@ def main():
     wordslist = narrow_wordslist(wordslist, 'include', include_list)
     wordslist = narrow_wordslist(wordslist, 'forget', forget_list)
     wordslist = narrow_wordslist(wordslist, 'exact', exact_list)
+    print("\nList of possible words:")
     print(wordslist)
+    print("\nFrequency count of occurring characters:")
+    print(frequency_of_letters(wordslist))
     # FOR SUBSEQUENT INTERATIONS - USE THE PACKAGED FUNCTION
     # SECOND ITERATION
     wordslist = single_logic_cycle(wordslist, include_list, forget_list, exclude_list, exact_list)
