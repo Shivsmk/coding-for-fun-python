@@ -7,9 +7,11 @@ Created on Sat May  8 21:29:07 2021
               https://www.youtube.com/playlist?list=PL_N_kL9gRTm8lh7GxFHh3ym1RXi6I6c50]
 """
 
+import random
+
 import pygame
 import pymunk
-import random
+
 
 def main():
     # CONSTANTS
